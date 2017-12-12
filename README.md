@@ -17,6 +17,8 @@ Jump to a section:
 		- [Robot's state](#RobotState)
 		- [Neural Network's output action vector](#Action)
 		- [Controller's source files](#Source)
+		- [Possible improvements about the controller](#Improve)
+	- [Robot's Optimizer](#Optimizer)
 
 <a name="Downloading"></a>
 ## Downloading the project from the GitHub repository
@@ -138,7 +140,7 @@ The robot in Webots therefore has 13 parts:
 - leftKneeArt
 - leftAnkle
 
-For each universal joint, the **X-** and **Z-axis** are regrouped in the hinge2joint and the **Y-axis** is implemented as a simple hinge joint. The hinge2joints control intermediate small parts that had to be added to complete the articualtion. It was done in the way that the geometry and the weight of the robot remain unchanged. 
+For each universal joint, the **X-** and **Z-axis** are regrouped in the hinge2joint and the **Y-axis** is implemented as a simple hinge joint. The hinge2joints control intermediate small parts that had to be added to complete the articualtion. It was done in a way that the geometry and the weight of the robot remain unchanged. 
 
 > The parts with "-Art" in their name, which stands for "-Articulation", are controlled by a hinge2joint and are intermediate parts. Except for the link between the knee and the ankle where the joints are inverted. 
 
@@ -250,7 +252,7 @@ These values are then converted by the controller into an **ZYX-Euler** represen
 <a name="Source"></a>
 #### Controller's source files
 
-- The main file is `DeepLoco_controller.cpp`: its functionning was explained in the paragraph "_Working principle of the controller_". 
+- The main file is `DeepLoco_controller.cpp`: its functionning was explained in the paragraph [Working principle of the controller](#WorkingPrinciple). 
 - `wrapper.hpp`: This header contains the function of the DLL the controller can call. 
 ```C++
 void API cHelloWorld();
@@ -267,50 +269,144 @@ void API cEvaluateNetwork(double in[INPUT_STATE_SIZE], double out[OUTPUT_STATE_S
 ```
 - `state.cpp`: This file is responsible for building the state vector. Here are its most important functions: 
 ```C++
-void getRootHeight(double state[INPUT_STATE_SIZE], Supervisor *robot)
+void getRootHeight(double state[INPUT_STATE_SIZE], Supervisor *robot);
 // responsible for calculating the root's height and stores it in the state vector
 
-void getPose(std::string part, int offset, double state[INPUT_STATE_SIZE], Supervisor *robot)
+void getPose(std::string part, int offset, double state[INPUT_STATE_SIZE], Supervisor *robot);
 // gets the relativ position of the specified part relativ to the root and stores it in the state vector
 
-void getRotation(std::string part, int offset, double state[INPUT_STATE_SIZE], Supervisor *robot)
+void getRotation(std::string part, int offset, double state[INPUT_STATE_SIZE], Supervisor *robot);
 // gets the relativ rotation of the specified part relativ to the root and stores it in the state vector
 
-void getPoseAndRotation(double state[INPUT_STATE_SIZE], Supervisor *robot)
+void getPoseAndRotation(double state[INPUT_STATE_SIZE], Supervisor *robot);
 // this function orchestrates the 2 previous functions
 
-void getVelocities(double state[INPUT_STATE_SIZE], Supervisor *robot)
+void getVelocities(double state[INPUT_STATE_SIZE], Supervisor *robot);
 // this function gets the linear and angular velocities in world's reference 
 // frame of each part and directly gives them to the state vector. 
 
-void updatePhase(double state[INPUT_STATE_SIZE], double timer, Supervisor *robot)
+void updatePhase(double state[INPUT_STATE_SIZE], double timer, Supervisor *robot);
 // this function defines where the robot is in the walk cycle (duration: 1s for making 2 steps)
 
-void getFeetContacts(double state[INPUT_STATE_SIZE], Supervisor *robot)
+void getFeetContacts(double state[INPUT_STATE_SIZE], Supervisor *robot);
 // sets the booleans indicating if a foot is touching ground (1) or not (0)
 
-void getWalkDeltas(double state[INPUT_STATE_SIZE], Supervisor *robot)
+void getWalkDeltas(double state[INPUT_STATE_SIZE], Supervisor *robot);
 // this function indicates the distance between the robot's feet and its targets 
 
-void getTargetHeading(double state[INPUT_STATE_SIZE], Supervisor *robot)
+void getTargetHeading(double state[INPUT_STATE_SIZE], Supervisor *robot);
 // gets the angle between the desired heading and the root's orientation (angle around Y axis)
 
-void buildStateVector(double state[INPUT_STATE_SIZE], Supervisor *robot, double timer)
+void buildStateVector(double state[INPUT_STATE_SIZE], Supervisor *robot, double timer);
 // this is the function implementing everything. Call it and your state vector gets built!
 ```
+- `apply.cpp`: This files mainly receives the action from the Neural Network, converts it and applies it to the motor. 
+```C++
+void setStartSpeed(Supervisor* robot);
+// gives an initial speed to some parts of the robot to help it start
 
+void axisAngleToEuler(double command[OUTPUT_STATE_SIZE], double convCom[OUTPUT_CONV_STATE_SIZE]);
+// conversion function between the 2 representations 
+
+void applyMotorsTargets(double c[OUTPUT_CONV_STATE_SIZE]);
+// applies the converted action to the motor and clamps out of range commands
+```
+- `control.cpp`: This file is used to define the desired heading of the robot and its foot targets. 
+```C++
+void defineHeading();
+// defines a heading vector in the XZ plane to follow by the robot
+
+void setFirstSteps(Supervisor *robot);
+// defines first 2 foot targets before starting the simulation 
+
+void planFootstep(bool stance, Supervisor *robot);
+// each time a step needs to be planned, this function is called to set a new target
+
+void placeTargetIndicators(Supervisor *robot, double t0[3], double t1[3]);
+// places 2 markers on the ground (2 solid nodes named Target0 and Target1) 
+// to indicate the placement of the foot targets
+```
+
+<a name="Improve"></a>
 #### Possible improvements about the controller
 
-- Implement the same PD controller as [the one used in DeepLoco](https://www.cc.gatech.edu/people/home/turk/my_papers/stable_pd.pdf). 
+- The PID controller of Webots does not match with the one in DeepLoco. Details about the controller implemented in DeepLoco can be found [here](https://www.cc.gatech.edu/people/home/turk/my_papers/stable_pd.pdf).
 
-#### Implementation of DeepLoco.dll
-
-TODO
-
+<a name="Optimizer"></a>
 ### Robot's Optimizer
 
-TODO
+#### Working principle of the optimizer
+
+In this case, the DLL has to do most of the job as it is orchestrating the whole learning process. In this case, the Webots controller behaves like a slave while the DLL calls its functions to accomplish given tasks. 
+
+The controller starts with the initialisation of different variables and declares a bunch of functions whose adress will be transmitted as callbacks to the DLL for later use during the learning process. While running, the DLL will store **tuples** containing information about the state of the robot. They are stored in the memory that will be then used to train the Network. There are actually 2 Networks: 
+- a Network evaluating the **Policy**
+- a Network evaluating the **Value Function**
+
+The **Value Function** is actually used to train the **Policy** as it is first updated. More detailed explanations are available on [page 41:4 of the paper](http://www.cs.ubc.ca/%7Evan/papers/2017-TOG-deepLoco/2017-TOG-deepLoco.pdf). 
+
+#### Optimizer's source files
+
+- `wrapper.hpp`: This wrapper exposes the function of the DLL:
+```C++
+void API getFuncPointers(pfVoid f1, pfVoid f2, pfVoid f3, pfState f4,pfAction f5, pfBool f7, pfVoid f8);
+// provides the callbacks from the main controller file to the DLL
+// the arguments are function adresses declared in Optimizer.cpp
+
+void API checkFunctionsPointers();
+// makes a simple test by printing some text in the controller but called from the DLL. 
+
+void API cSetupScenario();
+// this is the function initialising the Networks as well as the scenario that specifies 
+// what kind of task must be learned.
+
+void API cRun();
+// this function launches the learning process. Once launched, there is nothing left to do 
+// but wait for it to be completed
+
+void API cCleanUp();
+// this is an unchanged cleanup function from the DeepLoco_Optimizer
+```
+- The main file is `Optimizer.cpp`: 
+```C++
+void interfaceTest();
+// callback to test a call from the DLL
+
+void stepSimulation();
+// callback used by the DLL to step the simulation 
+
+void newCycle();
+// callback used by the DLL to reset the walk cycle timer
+
+void getState(double state[INPUT_STATE_SIZE]);
+// callback used by the DLL to create the state vector
+
+void getActionAndApply(double action[OUTPUT_STATE_SIZE]);
+// callback used by the DLL to let Webots retreive the action from the Network
+// and apply it to the motors
+
+bool detectFall();
+// callback used by the DLL to check if the robot fell
+
+void revertSimulation(); // soft-revert
+// callback used by the DLL to revert the physics in Webots
+// this is a SOFT-Revert!
+```
+- `softRevert.cpp`: this file allows to apply a soft revert to the robot in Webots.
+```C++
+void init_softRevert(Supervisor* sup);
+// gets data necessary to reset properly the robot when soft-reverting
+
+void softRevert(Supervisor* sup):
+// actually implements the soft-revert of the robot
+```
 
 ## Navigating through DeepLoco's Source Code
 
 TODO: list classes and functions and describe their role
+
+### Implementation of DeepLoco.dll
+
+TODO
+
+### Implementation of DeepLoco_optimizer.dll
