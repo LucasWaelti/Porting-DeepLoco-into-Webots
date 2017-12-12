@@ -11,11 +11,15 @@ Jump to a section:
 - [Downloading the project from the GitHub repository](#Downloading)
 - [Porting DeepLoco into Webots](#Porting)
 	- [Webots World](#World)
-	. [The Robot](#Robot)
+	- [The Robot](#Robot)
+	- [Robot's Controller](#RobotController)
+		- [Working principle of the controller](#WorkingPrinciple)
+		- [Robot's state](#RobotState)
+		- [Neural Network's output action vector](#Action)
+		- [Controller's source files](#Source)
 
-<a name="Downloading">
+<a name="Downloading"></a>
 ## Downloading the project from the GitHub repository
-</a>
 
 > You should not need to install anything as it is already done!
 
@@ -83,9 +87,8 @@ Two controllers were implemented:
 - a controller only used to make the robot walk, using the Neural Network of DeepLoco.
 - a controller implementing the learning process in order to allow the robot to learn how to walk in the Webots environement. 
 
-<a name="World">
+<a name="World"></a>
 ### Webots World
-</a>
 
 The World that was implemented is basic. It is only made of a plane, analog to what can be seen when launching **DeepLoco.exe** like this: `DeepLoco.exe -arg_file= args/test_args.txt`. 
 
@@ -99,9 +102,8 @@ Some modifications were made to the world's parameters:
 
 These parameters have a huge impact on the simulation. Once set, they sould not be changed. 
 
-<a name="Robot">
+<a name="Robot"></a>
 ### The Robot
-</a>
 
 The robot was manually rebuilt as precisely as possible in Webots, based on the file containing its dimensions, joint positions and weights: `.\data\characters\biped3d_mocap.txt`. The robot has `Supervisor` capacities, which was necessary because of the type of information that is required to be fed to the Neural Network (more on that later). The field `Supervisor->controllerArgs` needs to be set accordingly to the controller used by the robot/Supervisor. 
 
@@ -158,9 +160,8 @@ Originally, a torque stable PD controller is implemented for each joint in DeepL
 `Torque limits = [200,200,150,90][Nm]` (waist (root),hip,knee,ankle). 
 The implementation is based on [this paper](https://www.cc.gatech.edu/people/home/turk/my_papers/stable_pd.pdf). 
 
-<a name="RobotController">
+<a name="RobotController"></a>
 ### Robot's Controller
-</a>
 
 General information:
 - Path to the controller's directory: `.\Documents\DeepLoco_Webots\DeepLoco\controllers\DeepLoco_DLL_controller`
@@ -173,9 +174,8 @@ Webots arguments:
 
 > **WARNING**: Do not forget to set this field accordingly when switching controllers
 
-<a name="WorkingPrinciple">
+<a name="WorkingPrinciple"></a>
 #### Working principle of the controller
-</a>
 
 The controller asks DeepLoco.dll to parse its arguments provided on the command line when starting the controller in Webots. The DLL initialises then its Neural Network using the library **caffe**. A few initialisations are made inside the controller and the main loop of the controller can then start running the simulation. The Neural Network needs to be queried at **30 Hz**. The `timer` variable takes care of respecting this frequency. 
 
@@ -185,9 +185,8 @@ Each time a control process is started:
 - the generated action is converted from an **Axis-Angle** representation to an **Euler** representation. 
 - the action is finally applied to the motors. They receive a target position and the default PID controller of Webots will control the motor to move to the specified position.  
 
-<a name="RobotState">
+<a name="RobotState"></a>
 #### Robot's state
-</a>
 
 The Network requires a **125D input state vector**. Different types of information are concatenated into this single vector, it is constructed as follows: 
 - 0: Height of the root relativ to the ground
@@ -219,9 +218,8 @@ The Network requires a **125D input state vector**. Different types of informati
 	- left_delta1(z)
 - 124: error angle between desired orientation and root's heading. 
 
-<a name="Action">
+<a name="Action"></a>
 #### Neural Network's output action vector
-</a>
 
 After evaluating the input state vector depicted above, the Network produces a **22D action vector** indicating target positions expressed in the **Axis-Angle** convention for each joint. 
 - 0 Torso angle
@@ -249,9 +247,8 @@ After evaluating the input state vector depicted above, the Network produces a *
 
 These values are then converted by the controller into an **ZYX-Euler** representation before applying them to the motors. 
 
-<a name="Source">
+<a name="Source"></a>
 #### Controller's source files
-</a>
 
 - The main file is `DeepLoco_controller.cpp`: its functionning was explained in the paragraph "_Working principle of the controller_". 
 - `wrapper.hpp`: This header contains the function of the DLL the controller can call. 
