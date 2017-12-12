@@ -71,9 +71,8 @@ That's it for the main executable **DeepLoco.exe**. It is not excluded that some
 
 The project is a **Visual Studio Solution** using most of the same files that the **Solution** of **DeepLoco.exe**. The compilation did not generate much trouble and the presets in the IDE are analog to what was already described for **DeepLoco.exe**.
 
-<a name="Porting">
+<a name="Porting"></a>
 ## Porting DeepLoco into Webots
-</a>
 
 ### Introduction 
 
