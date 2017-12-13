@@ -19,6 +19,9 @@ Jump to a section:
 		- [Controller's source files](#Source)
 		- [Possible improvements about the controller](#Improve)
 	- [Robot's Optimizer](#Optimizer)
+		- [Working principle of the optimizer](#WorkingPrincipleOpt)
+		- [Optimizer's source files](#SourceOptimizer)
+- [Navigating through DeepLoco's Source Code](#DeepLocoSource)
 
 <a name="Downloading"></a>
 ## Downloading the project from the GitHub repository
@@ -335,6 +338,7 @@ void placeTargetIndicators(Supervisor *robot, double t0[3], double t1[3]);
 <a name="Optimizer"></a>
 ### Robot's Optimizer
 
+<a name="WorkingPrincipleOpt"></a>
 #### Working principle of the optimizer
 
 In this case, the DLL has to do most of the job as it is orchestrating the whole learning process. In this case, the Webots controller behaves like a slave while the DLL calls its functions to accomplish given tasks. 
@@ -345,6 +349,7 @@ The controller starts with the initialisation of different variables and declare
 
 The **Value Function** is actually used to train the **Policy** as it is first updated. More detailed explanations are available on [page 41:4 of the paper](http://www.cs.ubc.ca/%7Evan/papers/2017-TOG-deepLoco/2017-TOG-deepLoco.pdf). 
 
+<a name="SourceOptimizer"></a>
 #### Optimizer's source files
 
 - `wrapper.hpp`: This wrapper exposes the function of the DLL:
@@ -401,6 +406,7 @@ void softRevert(Supervisor* sup):
 // actually implements the soft-revert of the robot
 ```
 
+<a name="DeepLocoSource"></a>
 ## Navigating through DeepLoco's Source Code
 
 TODO: list classes and functions and describe their role
@@ -410,3 +416,5 @@ TODO: list classes and functions and describe their role
 TODO
 
 ### Implementation of DeepLoco_optimizer.dll
+
+TODO
