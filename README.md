@@ -500,5 +500,4 @@ double action[OUTPUT_STATE_SIZE] = { 0 };
 convert_action(out_y, action);
 pGetActionAndApply(action);
 pNewCycle();
-```
-The function evaluates the state of the robot to produce an action. These few lines allow to retreive the action from the Network to transmit them to Webots. 
+```The function evaluates the state of the robot to produce an action. These few lines allow to retreive the action from the Network to transmit them to Webots. 
