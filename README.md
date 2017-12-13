@@ -493,8 +493,7 @@ void convert_state(Eigen::VectorXd& state, double state_webots[INPUT_STATE_SIZE]
 
 Insertions of Webots' commands within the DeepLoco_Optimizer were made at following locations: 
 
-- In function `void cNeuralNet::Eval(const Eigen::VectorXd& x, Eigen::VectorXd& out_y) const`:
-Following lines were added: 
+- In function `void cNeuralNet::Eval(const Eigen::VectorXd& x, Eigen::VectorXd& out_y) const`, following lines were added: 
 ```C++
 // INTERFACE WEBOTS
 double action[OUTPUT_STATE_SIZE] = { 0 };
@@ -502,3 +501,4 @@ convert_action(out_y, action);
 pGetActionAndApply(action);
 pNewCycle();
 ```
+The function evaluates the state of the robot to produce an action. These few lines allow to retreive the action from the Network to transmit them to Webots. 
