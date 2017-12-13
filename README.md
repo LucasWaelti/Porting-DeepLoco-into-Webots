@@ -22,6 +22,8 @@ Jump to a section:
 		- [Working principle of the optimizer](#WorkingPrincipleOpt)
 		- [Optimizer's source files](#SourceOptimizer)
 - [Navigating through DeepLoco's Source Code](#DeepLocoSource)
+	- [Implementation of **DeepLoco.dll**](#DeepDLL)
+	- [Implementation of **Optimizer_Webots.dll**](#OptiDLL)
 
 <a name="Downloading"></a>
 ## Downloading the project from the GitHub repository
@@ -258,7 +260,7 @@ These values are then converted by the controller into an **ZYX-Euler** represen
 #### Controller's source files
 
 - The main file is `DeepLoco_controller.cpp`: its functionning was explained in the paragraph [Working principle of the controller](#WorkingPrinciple). 
-- `wrapper.hpp`: This header contains the function of the DLL the controller can call. 
+- `wrapper.hpp`: This header contains the function of **DeepLoco.dll** the controller can call. 
 ```C++
 void API cHelloWorld();
 // you can call this function if you want to check that the DLL is correctly communicating with the program 
@@ -343,7 +345,7 @@ void placeTargetIndicators(Supervisor *robot, double t0[3], double t1[3]);
 <a name="WorkingPrincipleOpt"></a>
 #### Working principle of the optimizer
 
-In this case, the DLL has to do most of the job as it is orchestrating the whole learning process. In this case, the Webots controller behaves like a slave while the DLL calls its functions to accomplish given tasks. 
+In this case, the DLL has to do most of the job as it is orchestrating the whole learning process. Here, the Webots controller behaves like a slave while the DLL calls its functions to accomplish given tasks. 
 
 The controller starts with the initialisation of different variables and declares a bunch of functions whose adress will be transmitted as callbacks to the DLL for later use during the learning process. While running, the DLL will store **tuples** containing information about the state of the robot. They are stored in the memory that will be then used to train the Network. There are actually 2 Networks: 
 - a Network evaluating the **Policy**
@@ -413,7 +415,8 @@ void softRevert(Supervisor* sup):
 
 TODO: list classes and functions and describe their role
 
-### Implementation of DeepLoco.dll
+<a name ="DeepDLL"></a>
+### Implementation of **DeepLoco.dll**
 
 Only the file `main.cpp` of the DeepLoco Project had to be modified to implement the DLL and the files `main.hpp`, `wrapper.cpp` and `wrapper.hpp` had to be added. Following functions were implemented in `main.cpp` that are called by the wrapper when a request is made by the controller in Webots: 
 ```C++
@@ -433,7 +436,8 @@ void evaluateNetwork(double in[INPUT_STATE_SIZE], double out[OUTPUT_STATE_SIZE])
 // and generates the action 
 ```
 
-### Implementation of DeepLoco_optimizer.dll
+<a name ="OptiDLL"></a>
+### Implementation of **Optimizer_Webots.dll**
 
 The implementation for the learning is somewhat more complex because of the fact that the DLL controls the global process and that functions that are usually called from the controller in Webots need now to be called from the DLL itself. 
 
@@ -468,4 +472,5 @@ pfAction pGetActionAndApply = NULL;
 pfBool pDetectFall = NULL;
 pfVoid pRevertSimulation = NULL;
 ```
-The function of `wrapper.cpp` were already discussed [here](#SourceOptimizer).
+The functions of `wrapper.cpp` were already discussed [here](#SourceOptimizer).
+
