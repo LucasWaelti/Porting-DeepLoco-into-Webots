@@ -493,7 +493,7 @@ void convert_state(Eigen::VectorXd& state, double state_webots[INPUT_STATE_SIZE]
 
 Insertions of Webots' commands within the DeepLoco_Optimizer were made at following locations: 
 
-1. In function `void cNeuralNet::Eval(const Eigen::VectorXd& x, Eigen::VectorXd& out_y) const`, following lines were added: 
+1. __Network Evaluation__: In function `void cNeuralNet::Eval(const Eigen::VectorXd& x, Eigen::VectorXd& out_y) const`, following lines were added: 
 ```C++
 // INTERFACE WEBOTS
 double action[OUTPUT_STATE_SIZE] = { 0 };
