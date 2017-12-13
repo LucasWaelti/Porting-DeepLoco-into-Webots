@@ -223,6 +223,8 @@ The Network requires a **125D input state vector**. Different types of informati
 	- left_delta1(z)
 - 124: error angle between desired orientation and root's heading. 
 
+The foot deltas are the vectors going from the foot to ist target, indicating the Network if it is far from its objectiv or not. The swinging foot receives the target0 (light green in the simulation) while the standing foot receives the target1 (dark green in the simulation). When the stance changes, target1 becomes target0 and a new target1 is generated. 
+
 <a name="Action"></a>
 #### Neural Network's output action vector
 
@@ -352,7 +354,7 @@ The **Value Function** is actually used to train the **Policy** as it is first u
 <a name="SourceOptimizer"></a>
 #### Optimizer's source files
 
-- `wrapper.hpp`: This wrapper exposes the function of the DLL:
+- `wrapper.hpp`: This wrapper exposes the function of **Optimizer_Webots.dll**:
 ```C++
 void API getFuncPointers(pfVoid f1, pfVoid f2, pfVoid f3, pfState f4,pfAction f5, pfBool f7, pfVoid f8);
 // provides the callbacks from the main controller file to the DLL
@@ -413,8 +415,57 @@ TODO: list classes and functions and describe their role
 
 ### Implementation of DeepLoco.dll
 
-TODO
+Only the file `main.cpp` of the DeepLoco Project had to be modified to implement the DLL and the files `main.hpp`, `wrapper.cpp` and `wrapper.hpp` had to be added. Following functions were implemented in `main.cpp` that are called by the wrapper when a request is made by the controller in Webots: 
+```C++
+// from file: main.cpp
+
+void InitCaffe();
+// Initialises the neural Network
+
+void ParseArgs(int argc, char** argv);
+// parses all arguments from the command line 
+
+void prepNetwork();
+// this function was written to explicitly select the Network that has to be loaded
+
+void evaluateNetwork(double in[INPUT_STATE_SIZE], double out[OUTPUT_STATE_SIZE]);
+// this functions evaluate the Network for a given input state provided by the controller
+// and generates the action 
+```
 
 ### Implementation of DeepLoco_optimizer.dll
 
-TODO
+The implementation for the learning is somewhat more complex because of the fact that the DLL controls the global process and that functions that are usually called from the controller in Webots need now to be called from the DLL itself. 
+
+The file `main.cpp` had to be modified again. Following functions are used: 
+```C++
+void ParseArgs(int argc, char** argv);
+// Nothing new here compared to DeepLoco.dll
+
+void SetupScenario();
+// this function was readapted from the one implemented in the Optimizer
+// it only supports the scenario "imitate_step" which is the standard default walk 
+
+void RunScene();
+// once this functio is called, the learning process is engaged and will proceed until it's done
+
+void CleanUp();
+// clean up function for the scenario once the learning is over
+```
+
+`wrapper.cpp` has more features this time: 
+```C++
+// the wrapper declares the pointers to the functions from the controller
+// that will be used for the learning. They are declared as global pointers
+// to allow any file including "wrapper.cpp" to use these pointers and use 
+// the function from the controller
+
+pfVoid pInterfaceTest = NULL;
+pfVoid pStepSimulation = NULL;
+pfVoid pNewCycle = NULL;
+pfState pGetState = NULL;
+pfAction pGetActionAndApply = NULL;
+pfBool pDetectFall = NULL;
+pfVoid pRevertSimulation = NULL;
+```
+The function of `wrapper.cpp` were already discussed [here](#SourceOptimizer).
