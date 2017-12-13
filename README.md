@@ -91,6 +91,8 @@ DeepLoco is based on different libraries:
 
 Everything was implemented from srcatch in this project, which yields a great number of files, that are often of no interest for porting DeepLoco into Webots (in particular all the rendering and the physics related files, which are all elements Webots takes care of). 
 
+TODO: KEEP DOCUMENTING THIS
+
 <a name="Porting"></a>
 ## Porting DeepLoco into Webots
 
@@ -487,4 +489,16 @@ void convert_action(Eigen::VectorXd& out_y, double action[OUTPUT_STATE_SIZE])
 void convert_state(Eigen::VectorXd& state, double state_webots[INPUT_STATE_SIZE])
 // Communication: Webots -> DLL
 // converts state to an Eigen vector from a default C++ double array
+```
+
+Insertions of Webots' commands within the DeepLoco_Optimizer were made at following locations: 
+
+- In function `void cNeuralNet::Eval(const Eigen::VectorXd& x, Eigen::VectorXd& out_y) const`:
+Following lines were added: 
+```C++
+// INTERFACE WEBOTS
+double action[OUTPUT_STATE_SIZE] = { 0 };
+convert_action(out_y, action);
+pGetActionAndApply(action);
+pNewCycle();
 ```
