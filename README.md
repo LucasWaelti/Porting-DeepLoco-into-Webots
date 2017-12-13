@@ -9,6 +9,7 @@ The DeepLoco project was implemented by searchers of the **University of British
 
 Jump to a section:
 - [Downloading the project from the GitHub repository](#Downloading)
+- [Navigating through DeepLoco's Source Code](#DeepLocoSource)
 - [Porting DeepLoco into Webots](#Porting)
 	- [Webots World](#World)
 	- [The Robot](#Robot)
@@ -21,9 +22,8 @@ Jump to a section:
 	- [Robot's Optimizer](#Optimizer)
 		- [Working principle of the optimizer](#WorkingPrincipleOpt)
 		- [Optimizer's source files](#SourceOptimizer)
-- [Navigating through DeepLoco's Source Code](#DeepLocoSource)
-	- [Implementation of **DeepLoco.dll**](#DeepDLL)
-	- [Implementation of **Optimizer_Webots.dll**](#OptiDLL)
+- [Implementation of **DeepLoco.dll**](#DeepDLL)
+- [Implementation of **Optimizer_Webots.dll**](#OptiDLL)
 
 <a name="Downloading"></a>
 ## Downloading the project from the GitHub repository
@@ -74,13 +74,22 @@ Go under `Project->DeepLoco Properties...`, and set following fields:
 		**%CUDA_PATH%\lib\x64**
 		**%(AdditionalLibraryDirectories)**
 
-That's it for the main executable **DeepLoco.exe**. It is not excluded that some more tweaking might be necessary. 
-
 #### DeepLoco_Optimizer.exe
 
 > This program is used to train the Policy of the robot for different scenarios. 
 
 The project is a **Visual Studio Solution** using most of the same files that the **Solution** of **DeepLoco.exe**. The compilation did not generate much trouble and the presets in the IDE are analog to what was already described for **DeepLoco.exe**.
+
+<a name="DeepLocoSource"></a>
+## Navigating through DeepLoco's Source Code
+
+DeepLoco is based on different libraries: 
+
+- `caffe`: used for every task related to Neural Networks. The library was adapted to this project and the version published in the GitHub repository has to be used. 
+- `Eigen`: a linear algebra library, used throughout the whole project. 
+- `Bullet`: the physics engine used to simulate the robot. 
+
+Everything was implemented from srcatch in this project, which yields a great number of files, that are often of no interest for porting DeepLoco into Webots (in particular all the rendering and the physics related files, which are all elements Webots takes care of). 
 
 <a name="Porting"></a>
 ## Porting DeepLoco into Webots
@@ -107,7 +116,7 @@ Some modifications were made to the world's parameters:
 - `WorldInfo->contactProperties->ContactProperties->bounceVelocity` = **1e-5**
 - `WorldInfo->contactProperties->ContactProperties->softCFM` = **1e-7**
 
-These parameters have a huge impact on the simulation. Once set, they sould not be changed. 
+These parameters have a huge impact on the simulation. Once set, they should not be changed. 
 
 <a name="Robot"></a>
 ### The Robot
@@ -356,7 +365,7 @@ The **Value Function** is actually used to train the **Policy** as it is first u
 <a name="SourceOptimizer"></a>
 #### Optimizer's source files
 
-- `wrapper.hpp`: This wrapper exposes the function of **Optimizer_Webots.dll**:
+- `wrapper.hpp`: This wrapper exposes the functions of **Optimizer_Webots.dll**:
 ```C++
 void API getFuncPointers(pfVoid f1, pfVoid f2, pfVoid f3, pfState f4,pfAction f5, pfBool f7, pfVoid f8);
 // provides the callbacks from the main controller file to the DLL
@@ -410,13 +419,8 @@ void softRevert(Supervisor* sup):
 // actually implements the soft-revert of the robot
 ```
 
-<a name="DeepLocoSource"></a>
-## Navigating through DeepLoco's Source Code
-
-TODO: list classes and functions and describe their role
-
 <a name ="DeepDLL"></a>
-### Implementation of **DeepLoco.dll**
+## Implementation of **DeepLoco.dll**
 
 Only the file `main.cpp` of the DeepLoco Project had to be modified to implement the DLL and the files `main.hpp`, `wrapper.cpp` and `wrapper.hpp` had to be added. Following functions were implemented in `main.cpp` that are called by the wrapper when a request is made by the controller in Webots: 
 ```C++
@@ -437,7 +441,7 @@ void evaluateNetwork(double in[INPUT_STATE_SIZE], double out[OUTPUT_STATE_SIZE])
 ```
 
 <a name ="OptiDLL"></a>
-### Implementation of **Optimizer_Webots.dll**
+## Implementation of **Optimizer_Webots.dll**
 
 The implementation for the learning is somewhat more complex because of the fact that the DLL controls the global process and that functions that are usually called from the controller in Webots need now to be called from the DLL itself. 
 
@@ -462,7 +466,7 @@ void CleanUp();
 // the wrapper declares the pointers to the functions from the controller
 // that will be used for the learning. They are declared as global pointers
 // to allow any file including "wrapper.cpp" to use these pointers and use 
-// the function from the controller
+// the functions from the controller
 
 pfVoid pInterfaceTest = NULL;
 pfVoid pStepSimulation = NULL;
@@ -474,3 +478,13 @@ pfVoid pRevertSimulation = NULL;
 ```
 The functions of `wrapper.cpp` were already discussed [here](#SourceOptimizer).
 
+Another file was used for converting the state and action vectors from and to `Eigen`, `converter.cpp`:
+```C++
+void convert_action(Eigen::VectorXd& out_y, double action[OUTPUT_STATE_SIZE])
+// Communication: DLL -> Webots
+// converts action from an Eigen vector to a default C++ double array
+
+void convert_state(Eigen::VectorXd& state, double state_webots[INPUT_STATE_SIZE])
+// Communication: Webots -> DLL
+// converts state to an Eigen vector from a default C++ double array
+```
