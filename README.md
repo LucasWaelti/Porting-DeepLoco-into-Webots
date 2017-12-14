@@ -493,12 +493,52 @@ void convert_state(Eigen::VectorXd& state, double state_webots[INPUT_STATE_SIZE]
 
 Insertions of Webots' commands within the DeepLoco_Optimizer were made at following locations: 
 
-1. ___Network Evaluation___: In function `void cNeuralNet::Eval(const Eigen::VectorXd& x, Eigen::VectorXd& out_y) const`, following lines were added: 
+1. ***Network Evaluation\****: In function `void cNeuralNet::Eval(const Eigen::VectorXd& x, Eigen::VectorXd& out_y) const`, following lines were added: 
 ```C++
 // INTERFACE WEBOTS
 double action[OUTPUT_STATE_SIZE] = { 0 };
-convert_action(out_y, action);
-pGetActionAndApply(action);
-pNewCycle();
+convert_action(out_y, action); // from converter.hpp
+pGetActionAndApply(action); // from wrapper.hpp
+pNewCycle(); // from wrapper.hpp
 ```
 The function evaluates the state of the robot to produce an action. These few lines allow to retreive the action to transmit to Webots. The `const Eigen::VectorXd& x` argument should already contain the state of robot in Webots as it is built earlier by other functions. It is hard to verify though and **might be a source of error!** 
+
+2. ***Tuples creation***: In function `void cScenarioExp::HandleNewActionUpdate()`, following lines were added:
+```C++
+//INTERFACE WEBOTS
+double state[INPUT_STATE_SIZE] = { 0 };
+pGetState(state);
+Eigen::VectorXd state_prov = Eigen::VectorXd::Zero(INPUT_STATE_SIZE);
+convert_state(state_prov,state);
+mCurrTuple.mStateEnd.segment(0, INPUT_STATE_SIZE) = state_prov.segment(0, INPUT_STATE_SIZE);
+//RecordState(mCurrTuple.mStateEnd); // Get state values from simulation instead
+```
+The function is queried each time a new tuple must be created. This occurs *each time the Neural Network is queried (30 Hz)*. The commented line was the original call to store the state in the tuple. 
+
+3. ***Simulation Update***: In function `void cScenarioSimChar::Update(double time_elapsed)`: 
+```C++
+// Step in Webots
+pStepSimulation(); // Replaces the update in DeepLoco
+```
+Most default update functions were disabled except for `PostSubstepUpdate(update_step);` that regulates the learning. Without this function, the process runs too fast in Webots. The function `PostSubstepUpdate(update_step);` calls `void cScenarioExp::HandleNewActionUpdate()` for saving the current tuple. 
+
+4. ***Building State***: In function `void cTerrainRLCharController::BuildPoliState(Eigen::VectorXd& out_state) const`: 
+```C++
+//INTERFACE WEBOTS
+double state[INPUT_STATE_SIZE] = { 0 };
+pGetState(state);
+Eigen::VectorXd state_prov = Eigen::VectorXd::Zero(INPUT_STATE_SIZE);
+convert_state(state_prov, state);
+out_state.segment(0, INPUT_STATE_SIZE) = state_prov.segment(0, INPUT_STATE_SIZE);
+```
+These few lines allow to store the current state of the robot in Webots so that other functions can then use it within the DLL. 
+
+5. ***Detecting  Fall\****: In Function `bool cScenarioSimChar::HasFallen() const`:
+```C++
+// INTERFACE WEBOTS (this actually the whole function)
+	bool fall = pDetectFall();
+	//std::cout << "cScenarioSimChar::HasFallen fall = " << fall << std::endl;
+	return fall;//mChar->HasFallen();
+```
+Furthermore, the function `cScenarioExpImitateStep::UpdateStepPlan()` checks for steps failure. This was deactivated, the instruction `mStepFail = true;` was desabled. It caused the simulation to revert immediatly. It is probable that this **has to be corrected** to ensure the good functionning of the learning process. 
+
