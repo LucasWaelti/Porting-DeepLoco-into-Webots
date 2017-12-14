@@ -91,7 +91,23 @@ DeepLoco is based on different libraries:
 
 Everything was implemented from srcatch in this project, which yields a great number of files, that are often of no interest for porting DeepLoco into Webots (in particular all the rendering and the physics related files, which are all elements Webots takes care of). 
 
-TODO: KEEP DOCUMENTING THIS
+### Directories: 
+
+This list (in alphabetical order) is not exhaustive but lists the main directories that are the most relevent. The directory containing everything is called `DeepLoco-master`. 
+
+- `anim`: contains source files relative to the robot kinematic. 
+- `args`: contains argument files that need to be specified when launching a program on the command line. For instance `DeepLoco.exe -arg_file= args/test_args.txt` or `DeepLoco_Optimizer.exe -arg_file= args/train_llc_args.txt`. These two examples are the only ones I really worked with. 
+- `Bullet`: contains the physics engine along with the `BulletCollision` and `BulletDynamics` directories present at the same level. 
+- `caffe`: contains everything related to the Neural Networks 
+- `data`: contains the files mentionned by the files contained in the `args` directory that the progam will parse. 
+- `Eigen`: the math library used in the entire project. 
+- `learning`: contains many files that make use of the Neural Networks. Mainly used for the training but also for evaluation of the Network (for instance `NeuralNet.cpp`, with its function `void cNeuralNet::Eval()`). 
+- `library`: contains `Bullet`, `caffe`, `Eigen` and a bunch of static and dynamic libraries, as well as other directories. Most of its content was extracted and replaced in the main directory of the project because of file dependencies. 
+- `optimizer`: contains the **Optimizer Solution** as well as the folder `scenarios` heavily used for the learning process. The executable, once compiled, can be found under `optimizer/x64/release`. It has to be copied to the main folder then. 
+- `output`: contains the trained model that the Optimizer produces. It has to contain an `intermediate` folder as well. 
+- `sim`: contains source files that control the simulation. In particular, `TerrainRLCharController.cpp` and `CtController.cpp` deal with storing the state of the robot. 
+- `util`: contains math functions as well as the parser files. 
+- `x64/release`: contains DeepLoco.exe. The executable has to be copied to the main folder.  
 
 <a name="Porting"></a>
 ## Porting DeepLoco into Webots
@@ -493,7 +509,7 @@ void convert_state(Eigen::VectorXd& state, double state_webots[INPUT_STATE_SIZE]
 
 Insertions of Webots' commands within the DeepLoco_Optimizer were made at following locations: 
 
-1. ***Network Evaluation\****: In function `void cNeuralNet::Eval(const Eigen::VectorXd& x, Eigen::VectorXd& out_y) const`, following lines were added: 
+1. ***Network Evaluation***: In function `void cNeuralNet::Eval(const Eigen::VectorXd& x, Eigen::VectorXd& out_y) const`, following lines were added: 
 ```C++
 // INTERFACE WEBOTS
 double action[OUTPUT_STATE_SIZE] = { 0 };
@@ -533,7 +549,7 @@ out_state.segment(0, INPUT_STATE_SIZE) = state_prov.segment(0, INPUT_STATE_SIZE)
 ```
 These few lines allow to store the current state of the robot in Webots so that other functions can then use it within the DLL. 
 
-5. ***Detecting  Fall\****: In Function `bool cScenarioSimChar::HasFallen() const`:
+5. ***Detecting  Fall***: In Function `bool cScenarioSimChar::HasFallen() const`:
 ```C++
 // INTERFACE WEBOTS (this actually the whole function)
 	bool fall = pDetectFall();
