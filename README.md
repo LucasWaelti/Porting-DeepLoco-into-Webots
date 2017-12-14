@@ -552,9 +552,9 @@ These few lines allow to store the current state of the robot in Webots so that 
 5. ***Detecting  Fall***: In Function `bool cScenarioSimChar::HasFallen() const`:
 ```C++
 // INTERFACE WEBOTS (this actually the whole function)
-	bool fall = pDetectFall();
-	//std::cout << "cScenarioSimChar::HasFallen fall = " << fall << std::endl;
-	return fall;//mChar->HasFallen();
+bool fall = pDetectFall();
+//std::cout << "cScenarioSimChar::HasFallen fall = " << fall << std::endl;
+return fall;//mChar->HasFallen();
 ```
 Furthermore, the function `cScenarioExpImitateStep::UpdateStepPlan()` checks for steps failure. This was deactivated, the instruction `mStepFail = true;` was desabled. It caused the simulation to revert immediatly. It is probable that this **has to be corrected** to ensure the good functionning of the learning process. 
 
