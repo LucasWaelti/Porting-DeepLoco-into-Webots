@@ -539,14 +539,14 @@ pStepSimulation(); // Replaces the update in DeepLoco
 Most default update functions were disabled except for `PostSubstepUpdate(update_step);` that regulates the learning. Without this function, the process runs too fast in Webots. The function `PostSubstepUpdate(update_step);` calls `void cScenarioExp::HandleNewActionUpdate()` for saving the current tuple. 
 
 4. ***Building State***: In function `void cTerrainRLCharController::BuildPoliState(Eigen::VectorXd& out_state) const`: 
-```C++
-//INTERFACE WEBOTS
-double state[INPUT_STATE_SIZE] = { 0 };
-pGetState(state);
-Eigen::VectorXd state_prov = Eigen::VectorXd::Zero(INPUT_STATE_SIZE);
-convert_state(state_prov, state);
-out_state.segment(0, INPUT_STATE_SIZE) = state_prov.segment(0, INPUT_STATE_SIZE);
-```
+	```C++
+	//INTERFACE WEBOTS
+	double state[INPUT_STATE_SIZE] = { 0 };
+	pGetState(state);
+	Eigen::VectorXd state_prov = Eigen::VectorXd::Zero(INPUT_STATE_SIZE);
+	convert_state(state_prov, state);
+	out_state.segment(0, INPUT_STATE_SIZE) = state_prov.segment(0, INPUT_STATE_SIZE);
+	```
 These few lines allow to store the current state of the robot in Webots so that other functions can then use it within the DLL. 
 
 5. ***Detecting  Fall***: In Function `bool cScenarioSimChar::HasFallen() const`:
