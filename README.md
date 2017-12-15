@@ -174,7 +174,7 @@ The robot in Webots therefore has 13 parts:
 
 For each universal joint, the **X-** and **Z-axis** are regrouped in the hinge2joint and the **Y-axis** is implemented as a simple hinge joint. The hinge2joints control intermediate small parts that had to be added to complete the articualtion. It was done in a way that the geometry and the weight of the robot remain unchanged. 
 
-> The parts with "-Art" in their name, which stands for "-Articulation", are controlled by a hinge2joint and are intermediate parts. Except for the link between the knee and the ankle where the joints are inverted. 
+> The parts with "-Art" in their name, which stands for "-Articulation", are controlled by a hinge2joint and are intermediate parts. Except for the link between the knee and the ankle where the type of joints are inverted. 
 
 The joints were named as follows: 
 - jTorsoBottomX, jTorsoTopY, jTorsoBottomZ 
@@ -192,7 +192,7 @@ Originally, a torque stable PD controller is implemented for each joint in DeepL
 `Kp = [1000,300,300,100][Nm/rad]` (waist (root),hip,knee,ankle), 
 `Kd = 0.1*Kp`, 
 `Torque limits = [200,200,150,90][Nm]` (waist (root),hip,knee,ankle). 
-The implementation is based on [this paper](https://www.cc.gatech.edu/people/home/turk/my_papers/stable_pd.pdf). 
+The implementation is based on [this paper](https://www.cc.gatech.edu/people/home/turk/my_papers/stable_pd.pdf). The PID velocity controller in Webots was tuned in a way that partially improve the walk. The PID constants are set using the function `gainTuningForDefaultPIDVelocityControl()` from the file `apply.cpp`. 
 
 <a name="RobotController"></a>
 ### Robot's Controller
@@ -344,6 +344,9 @@ void axisAngleToEuler(double command[OUTPUT_STATE_SIZE], double convCom[OUTPUT_C
 
 void applyMotorsTargets(double c[OUTPUT_CONV_STATE_SIZE]);
 // applies the converted action to the motor and clamps out of range commands
+
+void gainTuningForDefaultPIDVelocityControl();
+// allows to easily set the PID cosntants for each type of joints
 ```
 - `control.cpp`: This file is used to define the desired heading of the robot and its foot targets. 
 ```C++
@@ -517,7 +520,9 @@ convert_action(out_y, action); // from converter.hpp
 pGetActionAndApply(action); // from wrapper.hpp
 pNewCycle(); // from wrapper.hpp
 ```
-The function evaluates the state of the robot to produce an action. These few lines allow to retreive the action to transmit to Webots. The `const Eigen::VectorXd& x` argument should already contain the state of robot in Webots as it is built earlier by other functions. It is hard to verify though and **might be a source of error!** 
+The function evaluates the state of the robot to produce an action. These few lines allow to retreive the action to transmit to Webots. The `const Eigen::VectorXd& x` argument should already contain the state of robot in Webots as it is built earlier by other functions. It is hard to verify though and **might be a source of error!** Furthermore, the `eval()` function is called twice in a row, providing correct data the first time but overwriting it the second time with rubbish, generating extremely small and large values as well as `NaN`. The controller therefore checks the validity of the action to avoid this incorrect overwriting. 
+
+> There is **1** error here: the function is called twice in a row instead of once. The problem is that it depends on the DLL and not the controller! The problem might originate from DeepLoco's implementation. 
 
 2. ***Tuples creation***: In function `void cScenarioExp::HandleNewActionUpdate()`, following lines were added:
 ```C++
@@ -539,14 +544,14 @@ pStepSimulation(); // Replaces the update in DeepLoco
 Most default update functions were disabled except for `PostSubstepUpdate(update_step);` that regulates the learning. Without this function, the process runs too fast in Webots. The function `PostSubstepUpdate(update_step);` calls `void cScenarioExp::HandleNewActionUpdate()` for saving the current tuple. 
 
 4. ***Building State***: In function `void cTerrainRLCharController::BuildPoliState(Eigen::VectorXd& out_state) const`: 
-	```C++
-	//INTERFACE WEBOTS
-	double state[INPUT_STATE_SIZE] = { 0 };
-	pGetState(state);
-	Eigen::VectorXd state_prov = Eigen::VectorXd::Zero(INPUT_STATE_SIZE);
-	convert_state(state_prov, state);
-	out_state.segment(0, INPUT_STATE_SIZE) = state_prov.segment(0, INPUT_STATE_SIZE);
-	```
+```C++
+//INTERFACE WEBOTS
+double state[INPUT_STATE_SIZE] = { 0 };
+pGetState(state);
+Eigen::VectorXd state_prov = Eigen::VectorXd::Zero(INPUT_STATE_SIZE);
+convert_state(state_prov, state);
+out_state.segment(0, INPUT_STATE_SIZE) = state_prov.segment(0, INPUT_STATE_SIZE);
+```
 These few lines allow to store the current state of the robot in Webots so that other functions can then use it within the DLL. 
 
 5. ***Detecting  Fall***: In Function `bool cScenarioSimChar::HasFallen() const`:
