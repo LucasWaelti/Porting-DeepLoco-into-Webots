@@ -24,6 +24,7 @@ Jump to a section:
 		- [Optimizer's source files](#SourceOptimizer)
 - [Implementation of **DeepLoco.dll**](#DeepDLL)
 - [Implementation of **Optimizer_Webots.dll**](#OptiDLL)
+	- [**Known issues**](#Issues)
 
 <a name="Downloading"></a>
 ## Downloading the project from the GitHub repository
@@ -563,10 +564,11 @@ return fall;//mChar->HasFallen();
 ```
 Furthermore, the function `cScenarioExpImitateStep::UpdateStepPlan()` checks for steps failure. This was deactivated, the instruction `mStepFail = true;` was desabled. It caused the simulation to revert immediatly. It is probable that this **has to be corrected** to ensure the good functionning of the learning process. 
 
+<a name="Issues"></a>
 ### **Known issues**: 
 
 1. It needs to be defined why `cNeuralNet::Eval()` is always called twice in a row instead of once. The second call provides weird values that are of no apparent use. [Jason Peng](https://xbpeng.github.io/) confirmed this was not a normal behavior. 
 
 2. Identify if the information transmitted from Webots about the robot state are actually enough to train the Network. After a test run where the optimization ran for the night, the reward had not changed and the robot's behavior was still random. No improvements were observed. 
 
-3. Find a way that allows to optimize an already trained Network instead of restarting from sratch, which takes a considerable amount of time (possibly 2 days or more). 
+3. Find a way that allows to optimize an already trained Network instead of restarting from scratch, which takes a considerable amount of time (possibly 2 days or more). 
