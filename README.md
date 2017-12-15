@@ -1,6 +1,6 @@
 # Documentation about the project of importing DeepLoco into Webots
 
-The DeepLoco project was implemented by searchers of the **University of British Columbia**:
+The DeepLoco project was implemented by searchers of the **University of British Columbia** (Vancouver, Canada):
 
 - [Website](http://www.cs.ubc.ca/~van/papers/2017-TOG-deepLoco/)
 - [Paper PDF](http://www.cs.ubc.ca/~van/papers/2017-TOG-deepLoco/2017-TOG-deepLoco.pdf)
@@ -9,6 +9,7 @@ The DeepLoco project was implemented by searchers of the **University of British
 
 Jump to a section:
 - [Downloading the project from the GitHub repository](#Downloading)
+- [Organisation of the folders](#Folders)
 - [Navigating through DeepLoco's Source Code](#DeepLocoSource)
 - [Porting DeepLoco into Webots](#Porting)
 	- [Webots World](#World)
@@ -29,8 +30,6 @@ Jump to a section:
 <a name="Downloading"></a>
 ## Downloading the project from the GitHub repository
 
-> You should not need to install anything as it is already done!
-
 Download the repository on your machine **as well as** the `library` folder that can be found [here](https://github.com/xbpeng/DeepTerrainRL/releases). It can be found from the main repository under `Closed Issues: "Where is the external folder?"` too.
 
 ### Get the project to run
@@ -41,7 +40,7 @@ Download the repository on your machine **as well as** the `library` folder that
 
 The project is a **Visual Studio Solution** whose `include` and `linker` dependencies are specified for the **Microsoft Visual Studio IDE**. I used the 2017 version of the IDE. But there are configurations that are neccessary to set properly in order to be able to compile the project: 
 
-- First I had to recreate the architecture of the folders, which took quite some time. At that moment, I was not too familiar with the IDE and did not know what parameters were to be changed in order to solve that problem. That method was unfortunate as it led to a **8 Gb** folder containing the whole project with some redundancies... 
+- First I had to recreate the architecture of the folders, which took quite some time. At that moment, I was not too familiar with the IDE and did not know what parameters were to be changed in order to solve that problem. That method was unfortunate as it led to a **36 GB** folder containing the whole project with some redundancies... 
 
 - Once the IDE could find all its include paths, following parameters had to be specified in order for the linker to be able to work properly: 
 Go under `Project->DeepLoco Properties...`, and set following fields:
@@ -81,6 +80,20 @@ Go under `Project->DeepLoco Properties...`, and set following fields:
 
 The project is a **Visual Studio Solution** using most of the same files that the **Solution** of **DeepLoco.exe**. The compilation did not generate much trouble and the presets in the IDE are analog to what was already described for **DeepLoco.exe**.
 
+<a name="Folders"></a>
+## Organisation of the folders
+
+In `C:\Users\Lucas\Documents` you can find the two main directories: 
+- `DeepLoco`: includes everything related to the original softwares (DeepLoco.exe and DeepLoco:Optimizer.exe) as well as everything needed to create the two DLL used by each Webots controllers. 
+	`C:\Users\Lucas\Documents\DeepLoco` contains following folders: 
+	- `DeepLoco-master` that contains everything that is required to compile the project. 
+	- `ControllerFromScratch` that contains everything required to compile the DLL used to evaluate the Network and control the robot. 
+	- `OptimizerFromScratch` that contains everything required to compile the DLL used to optimize the robot's policy in Webots. 
+
+- `DeepLoco_Webots`: includes the Webots world and controllers that were implemented. 
+
+
+
 <a name="DeepLocoSource"></a>
 ## Navigating through DeepLoco's Source Code
 
@@ -94,7 +107,7 @@ Everything was implemented from srcatch in this project, which yields a great nu
 
 ### Directories: 
 
-This list (in alphabetical order) is not exhaustive but lists the main directories that are the most relevent. The directory containing everything is called `DeepLoco-master`. 
+This list (in alphabetical order) is not exhaustive but lists the main directories that are the most relevent. The main directory containing everything is `.../Documents/DeepLoco-master`. 
 
 - `anim`: contains source files relative to the robot kinematic. 
 - `args`: contains argument files that need to be specified when launching a program on the command line. For instance `DeepLoco.exe -arg_file= args/test_args.txt` or `DeepLoco_Optimizer.exe -arg_file= args/train_llc_args.txt`. These two examples are the only ones I really worked with. 
@@ -175,7 +188,7 @@ The robot in Webots therefore has 13 parts:
 
 For each universal joint, the **X-** and **Z-axis** are regrouped in the hinge2joint and the **Y-axis** is implemented as a simple hinge joint. The hinge2joints control intermediate small parts that had to be added to complete the articualtion. It was done in a way that the geometry and the weight of the robot remain unchanged. 
 
-> The parts with "-Art" in their name, which stands for "-Articulation", are controlled by a hinge2joint and are intermediate parts. Except for the link between the knee and the ankle where the type of joints are inverted. 
+> The parts with "-Art" in their name, which stands for "-Articulation", are controlled by a hinge2joint and are intermediate parts. Except for the link between the knee and the ankle where the joint types are inverted. 
 
 The joints were named as follows: 
 - jTorsoBottomX, jTorsoTopY, jTorsoBottomZ 
