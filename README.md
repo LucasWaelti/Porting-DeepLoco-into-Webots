@@ -602,9 +602,9 @@ Furthermore, the function `cScenarioExpImitateStep::UpdateStepPlan()` checks for
 [DeepLoco_DLL_optimizer] Action value -1.#IND00 > 50 -> invalid
 [DeepLoco_DLL_optimizer] Bad tuple detected!!!!
 ```
-With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Eval()` constantly seems to produce bad values (`9.16492e+252` which is ridiculous). But note that not the whole action array is corrupted. Most of the time, some fields of the action are slightly bigger than 50. And then party's on! (see below for yourself...). Following functions produce information in console about bad tuples: 
-- `bool cExpBuffer::CheckTuple(...)`
-- `void cNeuralNet::Eval()`
+With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Eval()` constantly seems to produce bad values (`9.16492e+252` which is ridiculous). But note that not the whole action array is corrupted. Most of the time, some fields of the action are slightly bigger than 50. And then party's on! Following functions produce information in console about bad tuples: 
+	- `bool cExpBuffer::CheckTuple(...)`
+	- `void cNeuralNet::Eval()`
 
 5. The time seems to be desynchronized between the DLL and Webots. The simulation in Webots might be running too fast. The controller is queried too often. Find a way to control the time in the DLL too!!
 
