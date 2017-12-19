@@ -7,9 +7,6 @@ The DeepLoco project was implemented by searchers of the **University of British
 - Contact of one of the searchers on this project with whom I could interract: [Jason Peng](https://xbpeng.github.io/), his email: JasonPeng142@hotmail.com
 - All files were downloaded from this [GitHub Repository](https://github.com/xbpeng/DeepLoco)
 
-In case you would want to contact me, here is my adress: lucas.waelti@gmail.com
-My last contribution to this project: 22.12.2017
-
 Jump to a section:
 - [Downloading the project from the GitHub repository](#Downloading)
 - [Organisation of the folders](#Folders)
