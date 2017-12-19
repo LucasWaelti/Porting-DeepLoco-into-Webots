@@ -7,6 +7,9 @@ The DeepLoco project was implemented by searchers of the **University of British
 - Contact of one of the searchers on this project with whom I could interract: [Jason Peng](https://xbpeng.github.io/), his email: JasonPeng142@hotmail.com
 - All files were downloaded from this [GitHub Repository](https://github.com/xbpeng/DeepLoco)
 
+In case you would want to contact me, here is my adress: lucas.waelti@gmail.com
+My last contribution to this project: 22.12.2017
+
 Jump to a section:
 - [Downloading the project from the GitHub repository](#Downloading)
 - [Organisation of the folders](#Folders)
@@ -602,9 +605,11 @@ Furthermore, the function `cScenarioExpImitateStep::UpdateStepPlan()` checks for
 [DeepLoco_DLL_optimizer] Action value -1.#IND00 > 50 -> invalid
 [DeepLoco_DLL_optimizer] Bad tuple detected!!!!
 ```
-With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Eval()` constantly seems to produce bad values (`9.16492e+252` which is ridiculous). But note that not the whole action array is corrupted. Most of the time, it's the field 16 of the action that is slightly bigger than 50. And then party's on! (see below for yourself...)
+With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Eval()` constantly seems to produce bad values (`9.16492e+252` which is ridiculous). But note that not the whole action array is corrupted. Most of the time, some fields of the action are slightly bigger than 50. And then party's on! (see below for yourself...)
 
 5. The time seems to be desynchronized between the DLL and Webots. The simulation in Webots might be running too fast. The controller is queried too often. Find a way to control the time in the DLL too!!
+
+6. The backpropagation (implemented by `cNeuralNet::Backward()`) is ***NOT CALLED*** when running the original version of `DeepLoco_Optimizer.cpp`. Thsi a ***MAJOR ISSUE***!!
 
 ```
 [DeepLoco_DLL_optimizer] Action value -1.#IND > 50 -> invalid
