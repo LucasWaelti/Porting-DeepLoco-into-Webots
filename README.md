@@ -609,3 +609,192 @@ With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Ev
 5. The time seems to be desynchronized between the DLL and Webots. The simulation in Webots might be running too fast. The controller is queried too often. Find a way to control the time in the DLL too!!
 
 6. The backpropagation (implemented by `cNeuralNet::Backward(...)`) is ***NOT CALLED*** when running the original version of `DeepLoco_Optimizer.cpp`. This is a ***MAJOR ISSUE***!!
+
+
+The structure in the learning: 
+```Cpp
+Insights from Jason Peng on the structure: 
+- cScenarioTrain, which setups the data collection and trainer
+- cScenarioExp and its subclasses for data collection
+- cTrainer classes to train the value function and policy
+
+
+//From main.cpp: (after some initialisation)
+{
+	main::SetupScenario() "HACK on timestep"
+	main::RunScene()
+	{
+		cScenarioTrain::Run() "HACK on threading"
+		{
+			//Multi threading implementation!! (8 THREADS)
+			for each thread: 
+			cScenarioTrain::ExpHelper(std::shared_ptr<cScenarioExp> exp, int exp_id)
+			{
+				while(!is_done)
+				{
+					cScenarioTrain::UpdateExpScene(double time_step, int exp_id, std::shared_ptr<cScenarioExp>& out_exp, bool& out_done)
+					{
+						cScenarioExpImitateTarget::Update(double time_elapsed)
+						{
+							cScenarioExp::Update(double time_elapsed)//Simulation update
+							{
+					 			"*"cScenarioSimChar::Update(double time_elapsed)//time_step = 0.033
+								{
+									"WEBOTS RUN SIMULATION 0.033 s"//Simulation run during 0.033 sec
+									cScenarioExp::PostSubstepUpdate(double time_step) 
+										cScenarioExp::HandleNewActionUpdate() "TUPLE CREATION"
+											cTerrainRLCharController::RecordPoliState(Eigen::VectorXd& out_state)
+												Needs "125D input state vector" from simulation!
+											cCtController::RecordPoliAction(Eigen::VectorXd& out_action)
+								}
+								cScenarioExp::UpdateMisc(double time_step) -> "[1]" No overload involved... weird
+								if(HasFallen)
+									cScenarioExp::HandleFallUpdate()
+										cScenarioExp::HandleNewActionUpdate() "TUPLE CREATION" 
+								if(EndEpisode)
+								{
+									cScenarioExp::HandleEpisodeEnd() -> "[2]" oh oh... empty method 
+									cScenarioExp::Reset()
+								}
+							}
+						}
+						is_full = cScenarioExp::IsTupleBufferFull()  -> Buffer size: 32 
+						if(is_full)
+						{
+							cScenarioExp::GetTuples()
+							cScenarioTrain::UpdateTrainer(const std::vector<tExpTuple>& tuples, int exp_id)
+							{
+								cNeuralNetLearner::Train(const std::vector<tExpTuple>& tuples)
+								{
+									cNeuralNetLearner::AddTuples(const std::vector<tExpTuple>& tuples)
+									{
+										cNeuralNetTrainer::AddTuples(const std::vector<tExpTuple>& tuples, int prev_id, int learner_id)
+										{
+											cNeuralNetTrainer::AddTuple(const tExpTuple& tuple, int prev_id, int learner_id)
+											{
+												cExpBuffer::AddTuple(const tExpTuple& tuple, int prev_id, int stream_id)
+												{
+													//Validity check (return true/false):
+													cExpBuffer::CheckTuple(const tExpTuple& tuple)
+													if(valid)
+													{
+														// ????
+														cExpBuffer::SetTuple(int t, const tExpTuple& tuple)
+													}
+													return tuple id 
+												}
+												//Build tuple X:
+												cNeuralNetTrainer::UpdateDataRecord(const tExpTuple& tuple)
+												{ 
+													cNeuralNetTrainer::BuildTupleX(const tExpTuple& tuple, Eigen::VectorXd& out_x)
+														out_x = tuple.mStateBeg;
+													//Update cNeuralNetTrainer::tDataRecord::mMin,mMax,mMean,mMeanSquares:
+													cNeuralNetTrainer::tDataRecord::Update(const Eigen::VectorXd data)
+												}
+											}
+										}
+									}
+									cNeuralNetTrainer::Train()
+									{
+										cNeuralNetTrainer::UpdateStage()
+										{
+											cNeuralNetTrainer::InitStage()
+											{
+												cNeuralNetTrainer::UpdateOffsetScale()
+												{
+													cNeuralNetTrainer::tDataRecord::CalcOffsetScale(const std::vector<cNeuralNet::eOffsetScaleType>& scale_types, double max_scale, Eigen::VectorXd& out_offset, Eigen::VectorXd& out_scale)
+													cNeuralNetTrainer::SetInputOffsetScale(const Eigen::VectorXd& offset, const Eigen::VectorXd& scale)
+													{
+														cNeuralNet::SetInputOffsetScale(const Eigen::VectorXd& offset, const Eigen::VectorXd& scale)
+															mInputOffset = offset; mInputScale = scale;
+													}
+												}
+											}
+										}
+										cNeuralNetTrainer::ApplySteps(int num_steps)
+										{
+											for(int i = 0; i < num_steps; ++i)
+												cNeuralNetTrainer::Step()
+												{
+													for(int i = 0; i < GetPoolSize(); ++i)
+													cNeuralNetTrainer::BuildProblem(int net_id, cNeuralNet::tProblem& out_prob)
+													{
+															cNeuralNetTrainer::GetNumTuplesPerBatch()
+																//Successive calls to get number of tuples in minibatch
+															cNeuralNetTrainer::FetchMinibatch(int size, std::vector<int>& out_batch)
+															{
+																for(i=0;i<size_of_batch;++i)
+																{
+																	int t = cExpBuffer::GetRandTupleID()
+																	or 
+																	int t = cExpBuffer::GetLastTupleID(int i)
+																	out_batch[i] = t;
+																}
+															}
+															succ = false
+															if(enough tuples in minibatch)
+															{
+																cNeuralNetTrainer::BuildProblemX(int net_id, const std::vector<int>& tuple_ids, cNeuralNet::tProblem& out_prob)
+																	cNeuralNetTrainer::GetTuple(int t)
+																		cExpBuffer::GetTuple(int t)
+																	cNeuralNetTrainer::BuildTupleX(const tExpTuple& tuple, Eigen::VectorXd& out_x)
+																		out_x = tuple.mStateBeg;
+																cNeuralNetTrainer::BuildProblemY(int net_id, const std::vector<int>& tuple_ids, const Eigen::MatrixXd& X, cNeuralNet::tProblem& out_prob)
+																	cNeuralNetTrainer::GetTuple(int t)
+																		cExpBuffer::GetTuple(int t)
+																	cNeuralNetTrainer::BuildTupleY(int net_id, const tExpTuple& tuple, Eigen::VectorXd& out_y)
+																		out_y = tuple.mAction;
+																succ = true
+															}
+															
+															DEFINE IF UpdateNet() HAS TO BE CALLED _(succ = true/false)
+														}
+														if(succ)
+														{
+														cNeuralNetTrainer::UpdateNet(int net_id, const cNeuralNet::tProblem& prob)//prob = mProb (NeuralNetTrainer.h)
+															{
+																cNeuralNet::Train(const tProblem& prob)
+																{
+																	//Need a solver! Failure otherwise
+																	cNeuralNet::LoadTrainData(const Eigen::MatrixXd& X, const Eigen::MatrixXd& Y)
+																	if(solver has weights)
+																		cNeuralNet::SetSolverErrWeights(const Eigen::MatrixXd& weights)
+																	cNeuralNet::StepSolver(int iters)
+																	{
+																		mSolver->ApplySteps(iters); //????????
+																		SyncNetParams(); //????????
+																	}
+																}
+															}
+														}
+													for end	
+												}
+											for end 
+										}
+									}
+								}
+								//Disp Iter, number of tuples, other constants...
+								cScenarioTrain::PrintLearnerInfo(int exp_id) const
+								if(200 % iter == 0 || iter == 1)
+									// -output_path= output/biped3d_step_model.h5
+									cNeuralNetLearner::OutputModel(const std::string& filename)
+							}
+							cScenarioTrain::UpdateExpSceneRates(int exp_id, std::shared_ptr<cScenarioExp>& out_exp)
+							is_done = cScenarioTrain::IsLearnerDone(int learner_id)//Decides to stop the program
+
+							ResetTupleBuffer()
+						}
+					}
+				}
+				exp->Shutdown() -> cScenarioTrain::Shutdown()	
+				{
+					cNeuralNetTrainer::EndTraining()
+						mDone = true
+					mTrainer->OutputModel(mOutputFile) -> 2 candidates, find correct one 
+				}
+			}
+			for each thread: join them back
+		}
+	}
+}
+```
