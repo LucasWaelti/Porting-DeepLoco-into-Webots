@@ -613,11 +613,11 @@ With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Ev
 
 The structure in the learning: 
 ```Cpp
-Insights from Jason Peng on the structure: 
-- cScenarioTrain, which setups the data collection and trainer
-- cScenarioExp and its subclasses for data collection
-- cTrainer classes to train the value function and policy
-
+//////////////////////////////////////////////
+// The following shows the structure of the //
+// function calls occuring when the 		//
+// Optimizer is running						//
+//////////////////////////////////////////////
 
 //From main.cpp: (after some initialisation)
 {
