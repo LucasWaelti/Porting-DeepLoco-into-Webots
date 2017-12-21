@@ -404,11 +404,11 @@ Webots arguments:
 
 In this case, the DLL has to do most of the job as it is orchestrating the whole learning process. Here, the Webots controller behaves like a slave while the DLL calls its functions to accomplish given tasks. 
 
-The controller starts with the initialisation of different variables and declares a bunch of functions whose adress will be transmitted as callbacks to the DLL for later use during the learning process. While running, the DLL will store **tuples** containing information about the state of the robot. They are stored in the memory that will be then used to train the Network. There are actually 2 Networks: 
-- a Network evaluating the **Policy**
-- a Network evaluating the **Value Function**
+The controller starts with the initialisation of different variables and declares a bunch of functions whose adress will be transmitted as callbacks to the DLL for later use during the learning process. While running, the DLL will store **tuples** containing information about the state of the robot. They are stored in the memory that will be then used to train the Network. Two elements need to be learned in tandem: 
+- the **Policy**
+- the **Value Function**
 
-The **Value Function** is actually used to train the **Policy** as it is first updated. More detailed explanations are available on [page 41:4 of the paper](http://www.cs.ubc.ca/%7Evan/papers/2017-TOG-deepLoco/2017-TOG-deepLoco.pdf). 
+The **Value Function** is updated first and is actually used to train the **Policy**. More detailed explanations are available on [page 41:4 of the paper](http://www.cs.ubc.ca/%7Evan/papers/2017-TOG-deepLoco/2017-TOG-deepLoco.pdf). 
 
 <a name="SourceOptimizer"></a>
 #### Optimizer's Source Files
@@ -595,16 +595,18 @@ Furthermore, the function `cScenarioExpImitateStep::UpdateStepPlan()` checks for
 
 1. It needs to be defined why `cNeuralNet::Eval()` is always called twice in a row instead of once. The second call provides weird values that are of no apparent use. [Jason Peng](https://xbpeng.github.io/) confirmed this was not a normal behavior. 
 
-2. Identify if the information transmitted from Webots about the robot state are actually enough to train the Network. After a test run where the optimization ran for the night, the reward had not changed and the robot's behavior was still random. No improvements were observed. 
+2. Identify if the information transmitted from Webots about the robot state are actually enough to train the Network. After a test run where the optimization ran for the night, the reward had not changed and the robot's behavior was still random. No improvements were observed. Something else might be the cause of this issue too. 
 
-3. Find a way that allows to optimize an already trained Network instead of restarting from scratch, which takes a considerable amount of time (possibly 2 days or more). The current implementation might already allow that, although the effect is not really visible. 
+3. Find a way that allows to optimize an already trained Network instead of restarting from scratch, which takes a considerable amount of time (possibly 2 days or more). The current implementation already allows it. It should be fine. 
 
-4. During the simulation, a lot of "bad tuples" are generated. They seem to appear after the first backward propagation. Before that, everything seems fine and then each time a tuple is generated, it is corrupted! The generated error: 
+4. During the simulation, a lot of "bad tuples" are suddenly generated. For a certain execution time, everything seems fine. A few bad values appear but nothing too critical, and then each time a tuple is generated, it is corrupted! The generated error: 
 ```
+...
 [DeepLoco_DLL_optimizer] Action value -1.#IND00 > 50 -> invalid
 [DeepLoco_DLL_optimizer] Bad tuple detected!!!!
+...
 ```
-With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Eval()` constantly seems to produce bad values (`9.16492e+252` which is ridiculous). But note that not the whole action array is corrupted. Most of the time, some fields of the action are slightly bigger than 50. And then party's on! Following functions produce information in console about bad tuples and invalid values: 
+With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Eval()` constantly seems to produce bad values (like `9.16492e+252` for instance which is ridiculous). But note that not the whole action array is corrupted. Most of the time, some fields of the action are slightly bigger than 50. And then party's on! Following functions produce information in console about bad tuples and invalid values: 
 - `bool cExpBuffer::CheckTuple(...)`
 - `void cNeuralNet::Eval()`
 
@@ -615,7 +617,7 @@ With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Ev
 <a name="Archi"></a>
 ## Architecture of The Learning Process: 
 
-I recommend using a text editor like "Sublim Text" for instance where you can easily collapse sections of the code for a better readability. The function call structure can be considered as a Cpp file for text highlighting. 
+I recommend using a text editor, like "Sublim Text" for instance, where you can easily collapse sections of the code for a better readability. The function call structure can be considered as a Cpp file for text highlighting. 
 
 ```Cpp
 /////////////////////////////////////////////////////
