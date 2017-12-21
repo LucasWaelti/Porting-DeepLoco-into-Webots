@@ -470,6 +470,8 @@ void softRevert(Supervisor* sup):
 <a name ="DeepDLL"></a>
 ## Implementation of **DeepLoco.dll**
 
+The DLL can be found here: `C:\Users\Lucas\Documents\DeepLoco\ControllerFromScratch\x64\Release`.
+
 Only the file `main.cpp` of the DeepLoco Project had to be modified to implement the DLL and the files `main.hpp`, `wrapper.cpp` and `wrapper.hpp` had to be added. Following functions were implemented in `main.cpp` that are called by the wrapper when a request is made by the controller in Webots: 
 ```C++
 // from file: main.cpp
@@ -490,6 +492,8 @@ void evaluateNetwork(double in[INPUT_STATE_SIZE], double out[OUTPUT_STATE_SIZE])
 
 <a name ="OptiDLL"></a>
 ## Implementation of **Optimizer_Webots.dll**
+
+The DLL can be found here: `C:\Users\Lucas\Documents\DeepLoco\OptimizerFromScratch\x64\Release`.
 
 The implementation for the learning is somewhat more complex because of the fact that the DLL controls the global process and that functions that are usually called from the controller in Webots need now to be called from the DLL itself. 
 
