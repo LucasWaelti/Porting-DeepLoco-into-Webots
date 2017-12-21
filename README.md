@@ -316,6 +316,7 @@ void API cInitCaffe();
 void API cEvaluateNetwork(double in[INPUT_STATE_SIZE], double out[OUTPUT_STATE_SIZE]);
 // get state action vector from network (provided in the out array)
 ```
+> **Note**: The `API` macro implements the `\__declspec(dllimport/dllexport)` to indicate that the functions are provided by a DLL. 
 - `state.cpp`: This file is responsible for building the state vector. Here are its most important functions: 
 ```C++
 void getRootHeight(double state[INPUT_STATE_SIZE], Supervisor *robot);
