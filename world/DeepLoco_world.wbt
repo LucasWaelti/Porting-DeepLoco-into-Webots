@@ -1,0 +1,647 @@
+#VRML_SIM V8.6 utf8
+WorldInfo {
+  title "DeepLoco_World"
+  CFM 1e-07
+  basicTimeStep 1
+  contactProperties [
+    ContactProperties {
+      coulombFriction [
+        0.9
+      ]
+      bounce 1e-05
+      bounceVelocity 1e-05
+      softCFM 1e-07
+    }
+  ]
+}
+Viewpoint {
+  orientation -0.038122409 0.99398063 0.10270923 2.4282732
+  position 2.0674614 1.1536625 -1.7713823
+}
+DirectionalLight {
+  direction -1 -1.5 1.2
+  castShadows TRUE
+}
+Background {
+  skyColor [
+    0.4 0.7 0.9
+    0 0 0
+  ]
+}
+Floor {
+  size 200 200
+}
+DEF root Supervisor {
+  translation 0 0.846 0
+  rotation 0 0 1 -0.13090031
+  children [
+    DEF ROOT Transform {
+      translation 0 0.03 0
+      children [
+        Shape {
+          appearance Appearance {
+            material Material {
+            }
+          }
+          geometry Box {
+            size 0.12 0.15 0.27
+          }
+        }
+      ]
+    }
+    DEF TORSO Hinge2Joint {
+      jointParameters DEF jTorsoBottomX HingeJointParameters {
+        position -0.05
+        anchor 0 0.1 0
+        minStop -0.5
+        maxStop 0.5
+      }
+      jointParameters2 DEF jTorsoBottomZ JointParameters {
+        position 0.1
+        minStop -1
+        maxStop 1
+      }
+      device [
+        PositionSensor {
+          name "s_torso_x"
+        }
+        RotationalMotor {
+          name "torso_x"
+          minPosition -0.5
+          maxPosition 0.5
+          maxTorque 200
+        }
+      ]
+      device2 [
+        PositionSensor {
+          name "s_torso_z"
+        }
+        RotationalMotor {
+          name "torso_z"
+          minPosition -1
+          maxPosition 1
+          maxTorque 200
+        }
+      ]
+      endPoint DEF torsoBottom Solid {
+        translation -0.00099833417 0.10993761 -0.00049729473
+        rotation -0.44687807 0.022362542 0.89431533 0.11179408
+        children [
+          HingeJoint {
+            jointParameters DEF jTorsoTopY HingeJointParameters {
+              axis 0 1 0
+              anchor 0 0.005 0
+              minStop -1
+              maxStop 1
+            }
+            device [
+              PositionSensor {
+                name "s_torso_y"
+              }
+              RotationalMotor {
+                name "torso_y"
+                minPosition -1
+                maxPosition 1
+              }
+            ]
+            endPoint DEF torsoTop Solid {
+              translation 0 0.165 0
+              children [
+                DEF TORSO_TOP Shape {
+                  appearance Appearance {
+                    material Material {
+                    }
+                  }
+                  geometry Box {
+                    size 0.13 0.32 0.29
+                  }
+                }
+              ]
+              name "torso_top"
+              boundingObject USE TORSO_TOP
+              physics Physics {
+                density -1
+                mass 10.45
+              }
+              linearVelocity 1.4 0 0
+              angularVelocity 0 -1 0
+            }
+          }
+          DEF TORSO_BOTTOM Shape {
+            appearance Appearance {
+              material Material {
+              }
+            }
+            geometry Box {
+              size 0.13 0.01 0.29
+            }
+          }
+        ]
+        name "torso_bottom"
+        boundingObject USE TORSO_BOTTOM
+        physics Physics {
+          density -1
+          mass 4.54
+        }
+      }
+    }
+    DEF LEFT_LEG Hinge2Joint {
+      jointParameters DEF jLeftHipArtX HingeJointParameters {
+        anchor 0 0 -0.085
+        minStop -1.2
+        maxStop 1.2
+      }
+      jointParameters2 DEF jLeftHipArtZ JointParameters {
+        position -0.05
+        minStop -2.57
+        maxStop 2.57
+      }
+      device [
+        PositionSensor {
+          name "s_left_hip_x"
+        }
+        RotationalMotor {
+          name "left_hip_x"
+          minPosition -1.2
+          maxPosition 1.2
+          maxTorque 200
+        }
+      ]
+      device2 [
+        PositionSensor {
+          name "s_left_hip_z"
+        }
+        RotationalMotor {
+          name "left_hip_z"
+          minPosition -2.57
+          maxPosition 2.57
+          maxTorque 200
+        }
+      ]
+      endPoint DEF leftHipArt Solid {
+        translation -0.00024989587 -0.0049937512 -0.085
+        rotation 0 0 -1 0.05
+        children [
+          DEF LEFT_HIP_Y HingeJoint {
+            jointParameters DEF jLeftHipY HingeJointParameters {
+              position 0.2
+              axis 0 1 0
+              anchor 0 -0.005 0
+              minStop -1
+              maxStop 1
+            }
+            device [
+              PositionSensor {
+                name "s_left_hip_y"
+              }
+              RotationalMotor {
+                name "left_hip_y"
+                minPosition -1
+                maxPosition 1
+                maxTorque 200
+              }
+            ]
+            endPoint DEF leftHip Solid {
+              translation 0 -0.21075 0
+              rotation 0 1 0 0.2
+              children [
+                DEF LEFT_KNEE HingeJoint {
+                  jointParameters DEF jLeftKneeY HingeJointParameters {
+                    position -0.7
+                    axis 0 0 1
+                    anchor 0 -0.20575 0
+                    minStop -3.14
+                    maxStop 0.0001
+                  }
+                  device [
+                    PositionSensor {
+                      name "s_left_knee_z"
+                    }
+                    RotationalMotor {
+                      name "left_knee_z"
+                      minPosition -3.14
+                      maxTorque 150
+                    }
+                  ]
+                  endPoint DEF leftKnee Solid {
+                    translation -0.12235627 -0.35101647 0
+                    rotation 0 0 -1 0.7
+                    children [
+                      HingeJoint {
+                        jointParameters DEF jLeftAnkleY HingeJointParameters {
+                          axis 0 1 0
+                          anchor 0 -0.21 0
+                          minStop -1
+                          maxStop 1
+                        }
+                        device [
+                          PositionSensor {
+                            name "s_left_ankle_y"
+                          }
+                          RotationalMotor {
+                            name "left_ankle_y"
+                            controlPID 5 0 0
+                            minPosition -1
+                            maxPosition 1
+                            maxTorque 90
+                          }
+                        ]
+                        endPoint DEF leftKneeArt Solid {
+                          translation 0 -0.215 0
+                          children [
+                            DEF ANKLE Hinge2Joint {
+                              jointParameters DEF jLeftKneeArtX HingeJointParameters {
+                                anchor 0 -0.005 0
+                                minStop -1
+                                maxStop 1
+                              }
+                              jointParameters2 DEF jLeftKneeArtZ JointParameters {
+                                minStop -1.57
+                                maxStop 1.57
+                              }
+                              device [
+                                PositionSensor {
+                                  name "s_left_ankle_x"
+                                }
+                                RotationalMotor {
+                                  name "left_ankle_x"
+                                  controlPID 5 0 0
+                                  minPosition -1
+                                  maxPosition 1
+                                  maxTorque 90
+                                }
+                              ]
+                              device2 [
+                                PositionSensor {
+                                  name "s_left_ankle_z"
+                                }
+                                RotationalMotor {
+                                  name "left_ankle_z"
+                                  controlPID 5 0 0
+                                  minPosition -1.57
+                                  maxPosition 1.57
+                                  maxTorque 90
+                                }
+                              ]
+                              endPoint DEF leftAnkle Solid {
+                                translation 0.0518 -0.02734 0
+                                children [
+                                  DEF ANKLE Shape {
+                                    appearance Appearance {
+                                      material Material {
+                                      }
+                                    }
+                                    geometry Box {
+                                      size 0.177 0.05 0.09
+                                    }
+                                  }
+                                ]
+                                boundingObject USE ANKLE
+                                physics Physics {
+                                  density -1
+                                  mass 1
+                                }
+                                linearVelocity 1.4 0 0
+                                angularVelocity 0 -1 0
+                              }
+                            }
+                            DEF KNEE_XZ Shape {
+                              appearance Appearance {
+                                material Material {
+                                }
+                              }
+                              geometry Box {
+                                size 0.07 0.01 0.07
+                              }
+                            }
+                          ]
+                          boundingObject USE KNEE_XZ
+                          physics Physics {
+                            density -1
+                            mass 0.0698
+                          }
+                        }
+                      }
+                      DEF KNEE Shape {
+                        appearance Appearance {
+                          material Material {
+                          }
+                        }
+                        geometry Box {
+                          size 0.07 0.42 0.07
+                        }
+                      }
+                    ]
+                    boundingObject USE KNEE
+                    physics Physics {
+                      density -1
+                      mass 0.1068
+                    }
+                    linearVelocity 1.4 0 0
+                    angularVelocity 0 -1 0
+                  }
+                }
+                DEF HIP Shape {
+                  appearance Appearance {
+                    material Material {
+                    }
+                  }
+                  geometry Box {
+                    size 0.09 0.4115 0.09
+                  }
+                }
+              ]
+              boundingObject USE HIP
+              physics Physics {
+                density -1
+                mass 4.39
+              }
+              linearVelocity 1.4 0 0
+              angularVelocity 0 -1 0
+            }
+          }
+          Shape {
+            appearance Appearance {
+              material Material {
+              }
+            }
+            geometry DEF LEFT_HIP_ART Box {
+              size 0.09 0.01 0.09
+            }
+          }
+        ]
+        boundingObject USE LEFT_HIP_ART
+        physics Physics {
+          density -1
+          mass 0.1
+        }
+      }
+    }
+    DEF RIGHT_LEG Hinge2Joint {
+      jointParameters DEF jRightHipArtX HingeJointParameters {
+        anchor 0 0 0.085
+        minStop -1.2
+        maxStop 1.2
+      }
+      jointParameters2 DEF jRightHipArtZ JointParameters {
+        position 0.5
+      }
+      device [
+        PositionSensor {
+          name "s_right_hip_x"
+        }
+        RotationalMotor {
+          name "right_hip_x"
+          minPosition -1.2
+          maxPosition 1.2
+          maxTorque 200
+        }
+      ]
+      device2 [
+        PositionSensor {
+          name "s_right_hip_z"
+        }
+        RotationalMotor {
+          name "right_hip_z"
+          minPosition -2.57
+          maxPosition 2.57
+          maxTorque 200
+        }
+      ]
+      endPoint DEF rightHipArt Solid {
+        translation 0.0023971276 -0.0043879127 0.085
+        rotation 0 0 1 0.5
+        children [
+          DEF LEFT_HIP_Y HingeJoint {
+            jointParameters DEF jRightHipY HingeJointParameters {
+              position -0.1
+              axis 0 1 0
+              anchor 0 -0.005 0
+              minStop -1
+              maxStop 1
+            }
+            device [
+              PositionSensor {
+                name "s_right_hip_y"
+              }
+              RotationalMotor {
+                name "right_hip_y"
+                minPosition -1
+                maxPosition 1
+                maxTorque 200
+              }
+            ]
+            endPoint DEF rightHip Solid {
+              translation 0 -0.21075 0
+              rotation 0 -1 0 0.1
+              children [
+                DEF LEFT_KNEE HingeJoint {
+                  jointParameters DEF jRightKneeY HingeJointParameters {
+                    position -0.2
+                    axis 0 0 1
+                    anchor 0 -0.20575 0
+                    minStop -3.14
+                    maxStop 0.0001
+                  }
+                  device [
+                    PositionSensor {
+                      name "s_right_knee_z"
+                    }
+                    RotationalMotor {
+                      name "right_knee_z"
+                      minPosition -3.14
+                      maxTorque 150
+                    }
+                  ]
+                  endPoint DEF rightKnee Solid {
+                    translation -0.037733266 -0.39189405 0
+                    rotation 0 0 -1 0.2
+                    children [
+                      HingeJoint {
+                        jointParameters DEF jRightAnkleY HingeJointParameters {
+                          axis 0 1 0
+                          anchor 0 -0.21 0
+                          minStop -1
+                          maxStop 1
+                        }
+                        device [
+                          PositionSensor {
+                            name "s_right_ankle_y"
+                          }
+                          RotationalMotor {
+                            name "right_ankle_y"
+                            controlPID 5 0 0
+                            minPosition -1
+                            maxPosition 1
+                            maxTorque 90
+                          }
+                        ]
+                        endPoint DEF rightKneeArt Solid {
+                          translation 0 -0.215 0
+                          children [
+                            DEF ANKLE Hinge2Joint {
+                              jointParameters DEF jRightKneeArtX HingeJointParameters {
+                                position -0.039
+                                anchor 0 -0.005 0
+                                minStop -1
+                                maxStop 1
+                              }
+                              jointParameters2 DEF jRightKneeArtZ JointParameters {
+                                position -0.167
+                                minStop -1.57
+                                maxStop 1.57
+                              }
+                              device [
+                                PositionSensor {
+                                  name "s_right_ankle_x"
+                                }
+                                RotationalMotor {
+                                  name "right_ankle_x"
+                                  controlPID 5 0 0
+                                  minPosition -1
+                                  maxPosition 1
+                                  maxTorque 90
+                                }
+                              ]
+                              device2 [
+                                PositionSensor {
+                                  name "s_right_ankle_z"
+                                }
+                                RotationalMotor {
+                                  name "right_ankle_z"
+                                  controlPID 5 0 0
+                                  minPosition -1.57
+                                  maxPosition 1.57
+                                  maxTorque 90
+                                }
+                              ]
+                              endPoint DEF rightAnkle Solid {
+                                translation 0.047365889 -0.035616353 0.0011946435
+                                rotation -0.22689879 -0.018990204 -0.97373318 0.17148313
+                                children [
+                                  DEF ANKLE Shape {
+                                    appearance Appearance {
+                                      material Material {
+                                      }
+                                    }
+                                    geometry Box {
+                                      size 0.177 0.05 0.09
+                                    }
+                                  }
+                                ]
+                                boundingObject USE ANKLE
+                                physics Physics {
+                                  density -1
+                                  mass 1
+                                }
+                              }
+                            }
+                            DEF KNEE_XZ Shape {
+                              appearance Appearance {
+                                material Material {
+                                }
+                              }
+                              geometry Box {
+                                size 0.07 0.01 0.07
+                              }
+                            }
+                          ]
+                          boundingObject USE KNEE_XZ
+                          physics Physics {
+                            density -1
+                            mass 0.0698
+                          }
+                        }
+                      }
+                      DEF KNEE Shape {
+                        appearance Appearance {
+                          material Material {
+                          }
+                        }
+                        geometry Box {
+                          size 0.07 0.42 0.07
+                        }
+                      }
+                    ]
+                    boundingObject USE KNEE
+                    physics Physics {
+                      density -1
+                      mass 0.1068
+                    }
+                  }
+                }
+                DEF HIP Shape {
+                  appearance Appearance {
+                    material Material {
+                    }
+                  }
+                  geometry Box {
+                    size 0.09 0.4115 0.09
+                  }
+                }
+              ]
+              boundingObject USE HIP
+              physics Physics {
+                density -1
+                mass 4.39
+              }
+            }
+          }
+          Shape {
+            appearance Appearance {
+              material Material {
+              }
+            }
+            geometry DEF LEFT_HIP_ART Box {
+              size 0.09 0.01 0.09
+            }
+          }
+        ]
+        boundingObject USE LEFT_HIP_ART
+        physics Physics {
+          density -1
+          mass 0.1
+        }
+      }
+    }
+  ]
+  name "DeepLoco"
+  boundingObject USE ROOT
+  physics DEF ROOT_PHYSICS Physics {
+    density -1
+    mass 10
+  }
+  controller "DeepLoco_DLL_optimizer"
+  controllerArgs "DeepLoco.exe -arg_file= args/train_llc_args.txt"
+  cpuConsumption 10
+}
+DEF Target0 Solid {
+  translation 0.6 0 -0.12
+  children [
+    Shape {
+      appearance DEF App Appearance {
+        material Material {
+          diffuseColor 0.333333 1 0
+          transparency 0.2
+        }
+      }
+      geometry DEF Geo Sphere {
+        radius 0.08
+      }
+    }
+  ]
+}
+DEF Target1 Solid {
+  translation 1.1 0 0.12
+  children [
+    Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 0 0.666667 0
+          transparency 0.2
+        }
+      }
+      geometry USE Geo
+    }
+  ]
+}
