@@ -26,6 +26,7 @@ Jump to a section:
 - [Implementation of **DeepLoco.dll**](#DeepDLL)
 - [Implementation of **Optimizer_Webots.dll**](#OptiDLL)
 	- [**Known issues**](#Issues)
+- [Architecture of The Learning Process](#Archi)
 
 <a name="Downloading"></a>
 ## Downloading the project from the GitHub repository
@@ -603,21 +604,23 @@ Furthermore, the function `cScenarioExpImitateStep::UpdateStepPlan()` checks for
 [DeepLoco_DLL_optimizer] Bad tuple detected!!!!
 ```
 With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Eval()` constantly seems to produce bad values (`9.16492e+252` which is ridiculous). But note that not the whole action array is corrupted. Most of the time, some fields of the action are slightly bigger than 50. And then party's on! Following functions produce information in console about bad tuples: 
-	- `bool cExpBuffer::CheckTuple(...)`
-	- `void cNeuralNet::Eval()`
+- `bool cExpBuffer::CheckTuple(...)`
+- `void cNeuralNet::Eval()`
 
 5. The time seems to be desynchronized between the DLL and Webots. The simulation in Webots might be running too fast. The controller is queried too often. Find a way to control the time in the DLL too!!
 
-6. The backpropagation (implemented by `cNeuralNet::Backward(...)`) is ***NOT CALLED*** when running the original version of `DeepLoco_Optimizer.cpp`. This is a ***MAJOR ISSUE***!!
+6. The backpropagation (implemented by `cNeuralNet::Backward(...)`) is ***NOT CALLED*** when running the original version of `DeepLoco_Optimizer.cpp`. Or at least it takes a lot of time before reaching it, as the replay buffer has to be filled before starting using the backpropagation. 
 
+<a name="Archi"></a>
+## Architecture of The Learning Process: 
 
-The structure in the learning: 
+I recommend using a text editor like "Sublim Text" for instance where you can easily collapse sections of the code for a better readability. The function call structure can be considered as a Cpp file for text highlighting. 
+
 ```Cpp
-//////////////////////////////////////////////
-// The following shows the structure of the //
-// function calls occuring when the 		//
-// Optimizer is running						//
-//////////////////////////////////////////////
+/////////////////////////////////////////////////////
+// The following shows the structure of the function
+// calls occuring when the Optimizer is running
+/////////////////////////////////////////////////////
 
 //From main.cpp: (after some initialisation)
 {
@@ -640,7 +643,24 @@ The structure in the learning:
 							{
 					 			"*"cScenarioSimChar::Update(double time_elapsed)//time_step = 0.033
 								{
+									cScenarioSimChar::PreSubstepUpdate(double time_step) //does nothing
+
+									cScenarioExpImitate::UpdateCharacter(double time_step)
+										cScenarioExpCacla::UpdateCharacter(time_step)
+											cSimCharSoftFall::Update(double time_step)
+												cSimCharacter::Update(double time_step)
+													cTerrainRLCharController::Update(double time_step)
+														cCtController::UpdateCalcTau()
+															cCtController::UpdateAction()
+																cCtController::ExploreAction()
+																	cCtController::ExploitPolicy()
+																		cNeuralNet::Eval() 
+																			"EVALUATE NETWORK"
+
+
+
 									"WEBOTS RUN SIMULATION 0.033 s"//Simulation run during 0.033 sec
+									
 									cScenarioExp::PostSubstepUpdate(double time_step) 
 										cScenarioExp::HandleNewActionUpdate() "TUPLE CREATION"
 											cTerrainRLCharController::RecordPoliState(Eigen::VectorXd& out_state)
