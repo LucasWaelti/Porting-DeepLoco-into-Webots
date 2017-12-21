@@ -4,7 +4,7 @@ The DeepLoco project was implemented by searchers of the **University of British
 
 - [Website](http://www.cs.ubc.ca/~van/papers/2017-TOG-deepLoco/)
 - [Paper PDF](http://www.cs.ubc.ca/~van/papers/2017-TOG-deepLoco/2017-TOG-deepLoco.pdf)
-- Contact of one of the searchers on this project with whom I could interract: [Jason Peng](https://xbpeng.github.io/), his email: JasonPeng142@hotmail.com
+- Contact of one of the searchers on this project I could interract with: [Jason Peng](https://xbpeng.github.io/), JasonPeng142@hotmail.com
 - All files were downloaded from this [GitHub Repository](https://github.com/xbpeng/DeepLoco)
 
 Jump to a section:
