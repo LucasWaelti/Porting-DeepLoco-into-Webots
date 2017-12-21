@@ -267,7 +267,7 @@ The Network requires a **125D input state vector**. Different types of informati
 	- left_delta1(z)
 - 124: error angle between desired orientation and root's heading. 
 
-The foot deltas are the vectors going from the foot to ist target, indicating the Network if it is far from its objectiv or not. The swinging foot receives the target0 (light green in the simulation) while the standing foot receives the target1 (dark green in the simulation). When the stance changes, target1 becomes target0 and a new target1 is generated. 
+The foot deltas are the vectors going from the foot to its target, indicating the Network if it is far from its objectiv or not. The swinging foot receives the target0 (light green in the simulation) while the standing foot receives the target1 (dark green in the simulation). When the stance changes, target1 becomes target0 and a new target1 is generated. 
 
 <a name="Action"></a>
 #### Neural Network's Output Action Vector
@@ -604,13 +604,13 @@ Furthermore, the function `cScenarioExpImitateStep::UpdateStepPlan()` checks for
 [DeepLoco_DLL_optimizer] Action value -1.#IND00 > 50 -> invalid
 [DeepLoco_DLL_optimizer] Bad tuple detected!!!!
 ```
-With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Eval()` constantly seems to produce bad values (`9.16492e+252` which is ridiculous). But note that not the whole action array is corrupted. Most of the time, some fields of the action are slightly bigger than 50. And then party's on! Following functions produce information in console about bad tuples: 
+With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Eval()` constantly seems to produce bad values (`9.16492e+252` which is ridiculous). But note that not the whole action array is corrupted. Most of the time, some fields of the action are slightly bigger than 50. And then party's on! Following functions produce information in console about bad tuples and invalid values: 
 - `bool cExpBuffer::CheckTuple(...)`
 - `void cNeuralNet::Eval()`
 
-5. The time seems to be desynchronized between the DLL and Webots. The simulation in Webots might be running too fast. The controller is queried too often. Find a way to control the time in the DLL too!!
+5. The time might not be perfectly synchronized between Webots and the DLL. 
 
-6. The backpropagation (implemented by `cNeuralNet::Backward(...)`) is ***NOT CALLED*** when running the original version of `DeepLoco_Optimizer.cpp`. Or at least it takes a lot of time before reaching it, as the replay buffer has to be filled before starting using the backpropagation. 
+6. The backpropagation (implemented by `cNeuralNet::Backward(...)`) is ***NOT CALLED*** when running the original version of `DeepLoco_Optimizer.cpp`. Or at least it takes a lot of time before reaching it, as the replay buffer has to be filled before starting using the backpropagation. It should take approximatively an hour before starting backpropagating, as the memory has to be filled first. 
 
 <a name="Archi"></a>
 ## Architecture of The Learning Process: 
