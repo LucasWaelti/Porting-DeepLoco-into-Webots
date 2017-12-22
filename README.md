@@ -7,6 +7,8 @@ The DeepLoco project was implemented by searchers of the **University of British
 - Contact of one of the searchers on this project I could interract with: [Jason Peng](https://xbpeng.github.io/), JasonPeng142@hotmail.com
 - All files were downloaded from this [GitHub Repository](https://github.com/xbpeng/DeepLoco)
 
+-----------------------------------------------------------------------------------------
+
 Jump to a section:
 - [Downloading the project from the GitHub repository](#Downloading)
 - [Organisation of the folders](#Folders)
@@ -28,10 +30,14 @@ Jump to a section:
 	- [**Known issues**](#Issues)
 - [Architecture of The Learning Process](#Archi)
 
+-----------------------------------------------------------------------------------------
+
 <a name="Downloading"></a>
 ## Downloading the project from the GitHub repository
 
 Download the repository on your machine **as well as** the `library` folder that can be found [here](https://github.com/xbpeng/DeepTerrainRL/releases). It can be found from the main repository under `Closed Issues: "Where is the external folder?"` too.
+
+You need to install CUDA on your machine. It can be downloaded from [here](https://developer.nvidia.com/cuda-downloads). 
 
 ### Get The Project To Run
 
@@ -463,14 +469,14 @@ void revertSimulation(); // soft-revert
 void init_softRevert(Supervisor* sup);
 // gets data necessary to reset properly the robot when soft-reverting
 
-void softRevert(Supervisor* sup):
+void softRevert(Supervisor* sup);
 // actually implements the soft-revert of the robot
 ```
 
 <a name ="DeepDLL"></a>
 ## Implementation of **DeepLoco.dll**
 
-The DLL can be found here: `C:\Users\Lucas\Documents\DeepLoco\ControllerFromScratch\x64\Release`.
+The DLL can be found here: `.\Documents\DeepLoco\ControllerFromScratch\x64\Release`.
 
 Only the file `main.cpp` of the DeepLoco Project had to be modified to implement the DLL and the files `main.hpp`, `wrapper.cpp` and `wrapper.hpp` had to be added. Following functions were implemented in `main.cpp` that are called by the wrapper when a request is made by the controller in Webots: 
 ```C++
@@ -493,7 +499,7 @@ void evaluateNetwork(double in[INPUT_STATE_SIZE], double out[OUTPUT_STATE_SIZE])
 <a name ="OptiDLL"></a>
 ## Implementation of **Optimizer_Webots.dll**
 
-The DLL can be found here: `C:\Users\Lucas\Documents\DeepLoco\OptimizerFromScratch\x64\Release`.
+The DLL can be found here: `.\Documents\DeepLoco\OptimizerFromScratch\x64\Release`.
 
 The implementation for the learning is somewhat more complex because of the fact that the DLL controls the global process and that functions that are usually called from the controller in Webots need now to be called from the DLL itself. 
 
@@ -551,9 +557,7 @@ convert_action(out_y, action); // from converter.hpp
 pGetActionAndApply(action); // from wrapper.hpp
 pNewCycle(); // from wrapper.hpp
 ```
-The function evaluates the state of the robot to produce an action. These few lines allow to retreive the action to transmit to Webots. The `const Eigen::VectorXd& x` argument should already contain the state of robot in Webots as it is built earlier by other functions. It is hard to verify though and **might be a source of error!** Furthermore, the `eval()` function is called twice in a row, providing correct data the first time but overwriting it the second time with rubbish, generating extremely small and large values as well as `NaN`. The controller therefore checks the validity of the action to avoid this incorrect overwriting. 
-
-> There is **1** error here: the function is called twice in a row instead of once. The problem is that it depends on the DLL and not the controller! The problem might originate from DeepLoco's implementation. 
+The function evaluates the state of the robot to produce an action. These few lines allow to retreive the action to transmit to Webots. The `const Eigen::VectorXd& x` argument should already contain the state of robot in Webots as it is built earlier by other functions. It is hard to verify though and **might be a source of error!** Furthermore, the `eval()` function is called twice in a row, providing correct data the first time but overwriting it the second time with rubbish, generating extremely small and large values as well as `NaN`. The controller therefore checks the validity of the action to avoid this incorrect overwriting.  
 
 2. ***Tuples creation***: In function `void cScenarioExp::HandleNewActionUpdate()`, following lines were added:
 ```C++
@@ -618,10 +622,11 @@ With `-1.#IND00` being the value of the bad action. Furthermore, `cNeuralNet::Ev
 
 6. The backpropagation (implemented by `cNeuralNet::Backward(...)`) is ***NOT CALLED*** when running the original version of `DeepLoco_Optimizer.cpp`. Or at least it takes a lot of time before reaching it, as the replay buffer has to be filled before starting using the backpropagation. It should take approximatively an hour before starting backpropagating, as the memory has to be filled first. 
 
+-------------------------------------------------------------------------------------------
 <a name="Archi"></a>
 ## Architecture of The Learning Process: 
 
-I recommend using a text editor, like "Sublim Text" for instance, where you can easily collapse sections of the code for a better readability. The function call structure can be considered as a Cpp file for text highlighting. 
+It is recommended to use a text editor, like "Sublim Text" for instance, where code sections can easily be collapsed for a better readability. The function call structure can be considered as a Cpp file for text highlighting. 
 
 ```Cpp
 /////////////////////////////////////////////////////
